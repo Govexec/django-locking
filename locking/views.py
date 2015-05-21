@@ -70,7 +70,7 @@ def is_locked(request, app, model, id):
             "for_user": getattr(obj.locked_by, 'username', None),
             "applies": obj.lock_applies_to(request.user)
             })
-        return HttpResponse(response, mimetype='application/json')
+        return HttpResponse(response, content_type='application/json')
     except:
         return HttpResponse(status=200)
 @log
@@ -83,5 +83,5 @@ def js_variables(request):
         'admin_url': "/".join(_s.ADMIN_URL.split('/')[:-1]),
     })
 
-    return HttpResponse(response, mimetype='application/json')
+    return HttpResponse(response, content_type='application/json')
 
