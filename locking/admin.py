@@ -95,9 +95,12 @@ class LockableAdmin(admin.ModelAdmin):
                     % (_s.STATIC_URL, locked_until)
             full_name = "%s %s" % (
                 lock.locked_by.first_name, lock.locked_by.last_name)
-            return u'''<a href="#" id=%s class="lock-status locked" title="Locked By: %s">%s%s</a>%s''' % (output, full_name, locked_until, " " + locked_by, multi_lock)
-        else:
-            return ''
+
+            return u'''
+                <a href="#" id=%s class="lock-status locked" title="Locked By: %s">%s%s</a>%s
+                ''' % (output, full_name, locked_until, " " + locked_by, multi_lock)
+
+        return ''
 
     get_lock_for_admin.allow_tags = True
     get_lock_for_admin.short_description = 'Lock'
