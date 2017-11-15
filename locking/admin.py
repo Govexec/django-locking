@@ -54,17 +54,23 @@ class LockableAdmin(admin.ModelAdmin):
         '''
 
         locked_by = ''
-        class_name = 'unlocked'
-        output = ''
-
+        multi_lock = ''
+        output = str(obj.id)
         content_type = ContentType.objects.get_for_model(obj)
+
         try:
             lock = Lock.objects.get(entry_id=obj.id,
                                     app=content_type.app_label,
                                     model=content_type.model)
-            class_name = 'locked'
             locked_by = lock.locked_by.username
-            output = str(obj.id)
+        except Lock.MultipleObjectsReturned:
+            locks = Lock.objects.filter(entry_id=obj.id,
+                                        app=content_type.app_label,
+                                        model=content_type.model).order_by('-_locked_at')
+            lock = locks[0]
+            locked_by = locks[0].locked_by.username
+            for username in set(lock.locked_by.username for lock in locks) - set([locked_by]):
+                multi_lock += '<div>%s</div>' % username
         except Lock.DoesNotExist:
             return ''
 
@@ -81,7 +87,7 @@ class LockableAdmin(admin.ModelAdmin):
                     <img src="%slocking/img/page_edit.png"
                     title="%s" />''' % (_s.STATIC_URL, locked_until_self)
             else:
-                locked_until = _(
+                locked_until_self = _(
                     "Still locked for %s more minute(s) by %s."
                 ) % (minutes_remaining, lock.locked_by)
                 locked_until = '''
@@ -89,10 +95,7 @@ class LockableAdmin(admin.ModelAdmin):
                     % (_s.STATIC_URL, locked_until)
             full_name = "%s %s" % (
                 lock.locked_by.first_name, lock.locked_by.last_name)
-            return u'''
-                <a href="#" id=%s class="lock-status %s"
-                   title="Locked By: %s">%s%s</a>''' % (output, class_name,
-                                                        full_name, locked_until, " " + locked_by)
+            return u'''<a href="#" id=%s class="lock-status locked" title="Locked By: %s">%s%s</a>%s''' % (output, full_name, locked_until, " " + locked_by, multi_lock)
         else:
             return ''
 
